@@ -25,8 +25,9 @@ export default function Canvas({ shader, className, style }: CanvasProps) {
       className={clsx(className)}
       style={style}
       ref={measure}
-      onMouseDown={() => {
+      onMouseDown={(event) => {
         hasClicked.current = true
+        setMousePos([event.clientX - measurements.x, event.clientY - measurements.y])
       }}
       onMouseUp={() => {
         hasClicked.current = false
