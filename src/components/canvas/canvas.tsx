@@ -3,7 +3,7 @@ import { Surface } from 'gl-react-dom'
 import { Node } from 'gl-react'
 import type { ShaderDefinition, ShaderIdentifier } from 'gl-react'
 import { useTimeLoop } from 'hooks/use-time-loop'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import useMeasure from 'react-use-measure'
 
 type CanvasProps = {
@@ -16,6 +16,8 @@ export default function Canvas({ shader, className, style }: CanvasProps) {
   const [measure, measurements] = useMeasure()
 
   const { time, tick } = useTimeLoop()
+
+  const hasClicked = useRef(false)
   const [mousePos, setMousePos] = useState([0, 0])
 
   return (
@@ -23,8 +25,16 @@ export default function Canvas({ shader, className, style }: CanvasProps) {
       className={clsx(className)}
       style={style}
       ref={measure}
+      onMouseDown={() => {
+        hasClicked.current = true
+      }}
+      onMouseUp={() => {
+        hasClicked.current = false
+      }}
       onMouseMove={(event) => {
-        setMousePos([event.clientX - measurements.x, event.clientY - measurements.y])
+        if (hasClicked.current) {
+          setMousePos([event.clientX - measurements.x, event.clientY - measurements.y])
+        }
       }}
     >
       <Surface width={measurements.width} height={measurements.height}>

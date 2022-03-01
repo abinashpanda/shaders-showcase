@@ -1,13 +1,13 @@
 import { GLSL, Shaders } from 'gl-react'
 import Canvas from 'components/canvas'
-import simple from 'shaders/simple.glsl'
+import rayMarcher from 'shaders/ray-marcher.glsl'
 
 const shader = Shaders.create({
-  simple: {
-    frag: GLSL`${simple}`,
+  rayMarcher: {
+    frag: GLSL`${rayMarcher}`,
   },
 })
 
 export default function App() {
-  return <Canvas className="h-screen" shader={shader.simple} />
+  return <Canvas className="h-screen" shader={shader.rayMarcher} />
 }
