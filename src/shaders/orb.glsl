@@ -51,7 +51,7 @@ float sdGyroid(vec3 point) {
   // multiply with 0.7 as this is not a perfect distance
   // abs makes the inside as outside, so that the gryoid is a shell
   // and we subtract 0.03 to give some thickness
-  return abs(0.7 * dot(sin(point), cos(point.yzx)) / 10.0) - 0.03;
+  return abs(0.7 * dot(sin(point), cos(point.zxy)) / 10.0) - 0.03;
 }
 
 // ray march functions
