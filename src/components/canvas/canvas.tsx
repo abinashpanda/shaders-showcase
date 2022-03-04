@@ -8,11 +8,12 @@ import useMeasure from 'react-use-measure'
 
 type CanvasProps = {
   shader: ShaderDefinition | ShaderIdentifier
+  uniforms?: { [key: string]: any }
   className?: string
   style?: React.CSSProperties
 }
 
-export default function Canvas({ shader, className, style }: CanvasProps) {
+export default function Canvas({ shader, uniforms = {}, className, style }: CanvasProps) {
   const [measure, measurements] = useMeasure()
 
   const { time, tick } = useTimeLoop()
@@ -47,6 +48,7 @@ export default function Canvas({ shader, className, style }: CanvasProps) {
             uTime: time,
             uTick: tick,
             uMouse: mousePos,
+            ...uniforms,
           }}
         />
       </Surface>
