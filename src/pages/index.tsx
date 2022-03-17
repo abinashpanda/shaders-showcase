@@ -8,6 +8,6 @@ const shader = Shaders.create({
   },
 })
 
-export default function App() {
+export default function RayMarcher() {
   return <Canvas className="h-screen" shader={shader.rayMarcher} />
 }

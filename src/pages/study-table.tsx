@@ -1,6 +1,6 @@
 import { GLSL, Shaders } from 'gl-react'
 import Canvas from 'components/canvas'
-import rayMarcher from 'shaders/fire-orb.glsl'
+import rayMarcher from 'shaders/study-table.glsl'
 
 const shader = Shaders.create({
   rayMarcher: {
