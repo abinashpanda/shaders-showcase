@@ -7,7 +7,8 @@ It should be only used as a template for creating new ray-marcher.
 #define MAX_STEPS 100
 #define MAX_DIST 100.
 #define SURF_DIST .001
-#define ZOOM 2.0
+#define ZOOM 0.5
+#define TAU 6.2831
 
 precision mediump float;
 
@@ -73,8 +74,18 @@ float sdTableLeg(vec3 point, vec3 pos) {
 // ray march functions
 
 float getDistance(vec3 point) {
-  float tableTop = sdBox(point, vec3(1, 0.01, 0.5)) - 0.05;
+  // rotate the scene
+  // point.zx *= rotate(sin(uTick * 0.01));
 
+  float floor = sdBox(point, vec3(2.0, 0.1, 2.0));
+  float backWall = sdBox(point - vec3(0.0, 1.9, -2.0), vec3(2.0, 2.0, 0.1));
+  float room = min(floor, backWall);
+  float d = room;
+
+  // table offset subtract
+  point -= vec3(0.7, 1.12, 0.9);
+
+  float tableTop = sdBox(point, vec3(1, 0.01, 0.5)) - 0.05;
   float tableLeg1 = sdTableLeg(point, vec3(-.8, 0.5, -0.4));
   float tableLeg2 = sdTableLeg(point, vec3(.8, 0.5, -0.4));
   float tableLeg3 = sdTableLeg(point, vec3(.8, 0.5, 0.4));
@@ -82,16 +93,30 @@ float getDistance(vec3 point) {
   float tableLeg = min(tableLeg1, tableLeg2);
   tableLeg = min(tableLeg, tableLeg3);
   tableLeg = min(tableLeg, tableLeg4);
+  float table = min(tableTop, tableLeg);
 
+  d = min(d, table);
+
+  // lamp offset subtract
+  point -= vec3(0.7, 0.08, 0.2);
   float lampBase = sdCappedCylinder(point, 0.15, 0.01);
   float lampPole = sdCappedCylinder(point - vec3(0.0, 0.17, 0.0), 0.025, 0.15);
   float lampCover = sdCappedCone(point - vec3(0.0, 0.4, 0.0), 0.1, 0.2, 0.1);
-
   float lamp = smin(lampPole, lampBase, 0.03);
   lamp = min(lamp, lampCover);
-
-  float d = min(tableTop, tableLeg);
   d = min(d, lamp);
+  // lamp offset add
+  point += vec3(0.7, 0.08, 0.2);
+
+  // table offset add
+  point += vec3(0.7, 1.12, 0.9);
+
+  // sofa offset subtract
+  point -= vec3(0.0, 0.3, -1.35);
+  float sofaBase = sdBox(point, vec3(1.25, 0.2, 0.5));
+  float sofa = sofaBase;
+  d = min(d, sofa);
+
   // float d = lamp;
 
   return d;
