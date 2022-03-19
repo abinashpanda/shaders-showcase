@@ -5,16 +5,17 @@ It should be only used as a template for creating new ray-marcher.
 */
 
 #define MAX_STEPS 100
+#define MAX_SHADOW_STEPS 10
 #define MAX_DIST 100.
 #define SURF_DIST .001
-#define ZOOM 1.5
+#define ZOOM 1.0
 #define TAU 6.2831
 
 precision mediump float;
 
 varying vec2 uv;
 
-uniform float uTick;
+// uniform float uTick;
 uniform float uAspectRatio;
 uniform vec2 uMouse;
 uniform vec2 uResolution;
@@ -39,6 +40,9 @@ float smin(float a, float b, float k) {
 }
 
 // sdf
+float sdSphere(vec3 p, float r) {
+  return length(p) - r;
+}
 
 float sdBox(vec3 point, vec3 size) {
   point = abs(point) - size;
@@ -77,8 +81,8 @@ float getDistance(vec3 point) {
   // rotate the scene
   // point.zx *= rotate(sin(uTick * 0.01));
 
-  float floor = sdBox(point, vec3(2.0, 0.1, 2.0));
-  float backWall = sdBox(point - vec3(0.0, 1.9, -2.0), vec3(2.0, 2.0, 0.1));
+  float floor = sdBox(point, vec3(2.5, 0.1, 2.0));
+  float backWall = sdBox(point - vec3(0.0, 1.9, -2.0), vec3(2.5, 2.0, 0.1));
 
   vec3 wPoint = point - vec3(0.0, 2.3, -2.0);
   wPoint = vec3(abs(wPoint.x + 0.8) - 0.32, abs(wPoint.y) - 0.332, wPoint.z);
@@ -99,7 +103,7 @@ float getDistance(vec3 point) {
   d = min(d, table);
 
   // lamp offset subtract
-  point -= vec3(0.7, 0.08, 0.2);
+  point -= vec3(0.7, 0.07, 0.2);
   float lampBase = sdCappedCylinder(point, 0.15, 0.01);
   float lampPole = sdCappedCylinder(point - vec3(0.0, 0.17, 0.0), 0.025, 0.15);
   float lampCover = sdCappedCone(point - vec3(0.0, 0.4, 0.0), 0.1, 0.2, 0.1);
@@ -107,23 +111,49 @@ float getDistance(vec3 point) {
   lamp = min(lamp, lampCover);
   d = min(d, lamp);
   // lamp offset add
-  point += vec3(0.7, 0.08, 0.2);
+  point += vec3(0.7, 0.07, 0.2);
+
+  // pot offset subtract
+  point -= vec3(0.45, 0.09, 0.3);
+  float potBase = sdCappedCone(point, 0.03, 0.025, 0.05);
+  potBase = smin(potBase, sdSphere(point - vec3(0.0, 0.03, 0.0), 0.04), 0.03);
+  float potHole = sdSphere(point - vec3(0.0, 0.04, 0.0), 0.04);
+  float pot = smin(potBase, -potHole, -0.01);
+  // float pot = min(potBase, potHole);
+  // float pot = potBase;
+  d = min(d, pot);
+  // pot offset add
+  point += vec3(0.45, 0.09, 0.3);
 
   // table offset add
   point += vec3(0.7, 0.7, 0.9);
 
   // sofa offset subtract
   point -= vec3(0.0, 0.29, -1.2);
-  float sofaBase = sdBox(point - vec3(0.0, -0.3, 0.0), vec3(1.25, 0.2, 0.5));
+  float sofaBase = sdBox(point - vec3(0.0, -0.3, 0.0), vec3(1.25, 0.2, 0.5)) - 0.02;
   vec3 ssPoint = vec3(abs(point.x) - 1.25, point.y + 0.1, point.z);
-  float sofaSide = sdBox(ssPoint, vec3(0.07, 0.4, 0.5));
+  float sofaSide = sdBox(ssPoint, vec3(0.07, 0.4, 0.5)) - 0.02;
   float sofaBack = sdBox(point + vec3(0.0, 0.1, 0.5), vec3(1.32, 0.4, 0.07));
   float sofa = min(sofaBase, sofaSide);
   sofa = min(sofa, sofaBack);
   vec3 slPoint = vec3(abs(point.x) - 1.2, point.y + 0.55, abs(point.z) - 0.35);
   float sofaLeg = sdCappedCone(slPoint, 0.05, 0.02, 0.05);
+  sofa = min(sofa, sofaLeg);
+  vec3 sbcPoint = vec3(abs(point.x) - 0.59, point.y + 0.04, point.z);
+  float sofaBottomCushion = sdBox(sbcPoint, vec3(0.57, 0.05, 0.5)) - 0.02;
+  sofa = min(sofa, sofaBottomCushion);
+  vec3 stcPoint = vec3(point.x, point.y - 0.34, point.z + 0.34);
+  stcPoint.x -= 0.36;
+  stcPoint.x = mod(stcPoint.x + 0.82, 0.86);
+  float sofaTopCushion = sdBox(stcPoint, vec3(0.8, 0.3, 0.05)) - 0.04;
+  sofaTopCushion = smin(sofaTopCushion, sdBox(point, vec3(1.18, 1.0, 0.5)), -0.03);
+  sofa = min(sofa, sofaTopCushion);
+  // sofa offset add
+  point += vec3(0.0, 0.29, -1.2);
+
   d = min(d, sofa);
-  d = min(d, sofaLeg);
+
+  // d = min(d, sdSphere(point - vec3(0.0, 2.5, 0.0), 0.3));
 
   return d;
 }
@@ -140,6 +170,22 @@ float rayMarch(vec3 rayOrigin, vec3 rayDirection) {
   }
 
   return dO;
+}
+
+float shadow(vec3 rayOrigin, vec3 rayDirection, float minT, float maxT, float k) {
+  float res = 1.0;
+  float t = minT;
+  for(int i = 0; i < MAX_SHADOW_STEPS; i++) {
+    if(t > maxT)
+      break;
+    float h = getDistance(rayOrigin + rayDirection * t);
+    if(h < SURF_DIST) {
+      return 0.0;
+    }
+    res = min(res, k * h / t);
+    t += h;
+  }
+  return res;
 }
 
 vec3 getNormal(vec3 point) {
@@ -162,13 +208,13 @@ void main() {
   vec2 pos = (uv - vec2(0.5)) * vec2(uAspectRatio, 1);
   vec2 mouse = uMouse / uResolution;
 
-  vec3 rayOrigin = vec3(0, 5, -5);
+  vec3 rayOrigin = vec3(0, 5, -1);
   rayOrigin.yz *= rotate(-mouse.y * 3.14 + 1.);
   rayOrigin.xz *= rotate(-mouse.x * 6.2831);
 
-  vec3 rayDirection = getRayDirection(pos, rayOrigin, vec3(0, 1.5, 0), ZOOM);
+  vec3 rayDirection = getRayDirection(pos, rayOrigin, vec3(0, 1., 0), ZOOM);
   vec3 color = vec3(0);
-  vec3 lightPos = vec3(-10, 5, -10);
+  vec3 lightPos = vec3(0.0, 20, 10.0);
 
   float d = rayMarch(rayOrigin, rayDirection);
   if(d < MAX_DIST) {
@@ -176,10 +222,10 @@ void main() {
     vec3 n = getNormal(p);
 
     float diffuseLighting = dot(n, normalize(lightPos)) * .5 + .5;
-    float rayMarchToLight = rayMarch(p + n * SURF_DIST * 2.0, normalize(lightPos - p));
-    if(rayMarchToLight < length(lightPos - p)) {
-      diffuseLighting *= 0.7;
-    }
+    float shadowFactor = shadow(p + n * SURF_DIST * 10.0, normalize(lightPos - p), 1.0, 20.0, 2.0);
+    // hack to prevent from absolute darkening
+    shadowFactor += smoothstep(0.9, 0.0, shadowFactor) * 0.3;
+    diffuseLighting *= shadowFactor;
 
     color = vec3(diffuseLighting);
   }

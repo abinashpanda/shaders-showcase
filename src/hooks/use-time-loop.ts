@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-export function useTimeLoop(refreshRate: number = 60) {
+export function useTimeLoop(refreshRate: number = 60, runTimer: boolean = true) {
   const [time, setTime] = useState(0)
   const [tick, setTick] = useState(0)
 
@@ -14,7 +14,9 @@ export function useTimeLoop(refreshRate: number = 60) {
       let lastTime = -interval
 
       function loop(time: number) {
-        raf.current = requestAnimationFrame(loop)
+        if (runTimer) {
+          raf.current = requestAnimationFrame(loop)
+        }
         if (!startTime) {
           startTime = time
         }
@@ -33,7 +35,7 @@ export function useTimeLoop(refreshRate: number = 60) {
         }
       }
     },
-    [refreshRate],
+    [refreshRate, runTimer],
   )
 
   return { time, tick }

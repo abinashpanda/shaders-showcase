@@ -9,14 +9,15 @@ import useMeasure from 'react-use-measure'
 type CanvasProps = {
   shader: ShaderDefinition | ShaderIdentifier
   uniforms?: { [key: string]: any }
+  passTickUniform?: boolean
   className?: string
   style?: React.CSSProperties
 }
 
-export default function Canvas({ shader, uniforms = {}, className, style }: CanvasProps) {
+export default function Canvas({ shader, uniforms = {}, passTickUniform = false, className, style }: CanvasProps) {
   const [measure, measurements] = useMeasure()
 
-  const { time, tick } = useTimeLoop()
+  const { time, tick } = useTimeLoop(60, passTickUniform)
 
   const hasClicked = useRef(false)
   const [mousePos, setMousePos] = useState([0, 0])
@@ -45,10 +46,9 @@ export default function Canvas({ shader, uniforms = {}, className, style }: Canv
           uniforms={{
             uAspectRatio: measurements.width / measurements.height,
             uResolution: [measurements.width, measurements.height],
-            uTime: time,
-            uTick: tick,
             uMouse: mousePos,
             ...uniforms,
+            ...(passTickUniform ? { uTick: tick, uTime: time } : {}),
           }}
         />
       </Surface>
