@@ -28,6 +28,10 @@ mat2 rotate(float angle) {
   return mat2(c, -s, s, c);
 }
 
+float random2d(vec2 coord) {
+  return fract(sin(dot(coord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
 float dot2(vec2 p) {
   return dot(p, p);
 }
@@ -67,6 +71,11 @@ float sdCappedCone(vec3 point, float h, float r1, float r2) {
   vec2 cb = q - k1 + k2 * clamp(dot(k1 - q, k2) / dot2(k2), 0.0, 1.0);
   float s = (cb.x < 0.0 && ca.y < 0.0) ? -1.0 : 1.0;
   return s * sqrt(min(dot2(ca), dot2(cb)));
+}
+
+float sdCone(vec3 point, vec2 c, float h) {
+  float q = length(point.xz);
+  return max(dot(c.xy, vec2(q, point.y)), -h - point.y);
 }
 
 // scene specific sdf
@@ -122,6 +131,18 @@ float getDistance(vec3 point) {
   // float pot = min(potBase, potHole);
   // float pot = potBase;
   d = min(d, pot);
+
+  vec3 plantPoint = point - vec3(0.0, 0.02, 0.0);
+  plantPoint.x = mod(plantPoint.x + 0.01, 0.01);
+  plantPoint.z = mod(plantPoint.z + 0.01, 0.01);
+  float pHeight = plantPoint.y;
+  float randomValue = random2d(ceil(point.xy * 5.));
+  plantPoint.xy *= rotate(pHeight * randomValue * 10.0);
+  float plant = sdCappedCone(plantPoint, 0.10, 0.008, 0.0);
+  plant = max(plant, sdBox(point, vec3(0.02, 1.0, 0.02)));
+  // float plant = sdSphere(point - vec3(0.0, 0.2, 0.0), 0.1);
+  d = smin(d, plant, 0.01);
+
   // pot offset add
   point += vec3(0.45, 0.09, 0.3);
 
@@ -146,7 +167,7 @@ float getDistance(vec3 point) {
   stcPoint.x -= 0.36;
   stcPoint.x = mod(stcPoint.x + 0.82, 0.86);
   float sofaTopCushion = sdBox(stcPoint, vec3(0.8, 0.3, 0.05)) - 0.04;
-  sofaTopCushion = smin(sofaTopCushion, sdBox(point, vec3(1.18, 1.0, 0.5)), -0.03);
+  sofaTopCushion = smin(sofaTopCushion, sdBox(point, vec3(1.15, 1.0, 0.5)), -0.03);
   sofa = min(sofa, sofaTopCushion);
   // sofa offset add
   point += vec3(0.0, 0.29, -1.2);
