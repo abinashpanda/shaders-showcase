@@ -9,5 +9,5 @@ const shader = Shaders.create({
 })
 
 export default function RayMarcher() {
-  return <Canvas className="h-screen" shader={shader.orb} />
+  return <Canvas className="h-screen" shader={shader.orb} passTickUniform />
 }
