@@ -1,7 +1,7 @@
 import { GLSL, Shaders } from 'gl-react'
 import Canvas from 'components/canvas'
 import ripple from 'shaders/ripple.glsl'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { getImageSize } from 'utils/image'
 import { useIsomorphicUseEffect } from 'hooks/use-isomorphic-use-effect'
 
@@ -13,7 +13,6 @@ const shader = Shaders.create({
 
 const IMAGE =
   'https://images.unsplash.com/photo-1590593162201-f67611a18b87?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=730&q=80'
-// 'pattern.jpg'
 
 export default function Ripple() {
   const [patternAspectRatio, setPatternAspectRatio] = useState<number>(0)
