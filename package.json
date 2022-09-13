@@ -11,8 +11,8 @@
   "dependencies": {
     "autoprefixer": "^10.4.2",
     "clsx": "^1.1.1",
-    "gl-react": "^5.0.0",
-    "gl-react-dom": "^5.1.0",
+    "gl-react": "^5.2.0",
+    "gl-react-dom": "^5.2.1",
     "next": "12.1.0",
     "postcss": "^8.4.7",
     "react": "17.0.2",

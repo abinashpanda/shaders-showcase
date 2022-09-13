@@ -10,14 +10,26 @@ type CanvasProps = {
   shader: ShaderDefinition | ShaderIdentifier
   uniforms?: { [key: string]: any }
   passTickUniform?: boolean
+  passAspectRatioUniform?: boolean
+  passResolutionUniform?: boolean
+  passMouseUniform?: boolean
   className?: string
   style?: React.CSSProperties
 }
 
-export default function Canvas({ shader, uniforms = {}, passTickUniform = false, className, style }: CanvasProps) {
+export default function Canvas({
+  shader,
+  uniforms = {},
+  passTickUniform = false,
+  passAspectRatioUniform = true,
+  passResolutionUniform = true,
+  passMouseUniform = true,
+  className,
+  style,
+}: CanvasProps) {
   const [measure, measurements] = useMeasure()
 
-  const { time, tick } = useTimeLoop(60, passTickUniform)
+  const { tick } = useTimeLoop(60, passTickUniform)
 
   const hasClicked = useRef(false)
   const [mousePos, setMousePos] = useState([0, 0])
@@ -44,11 +56,19 @@ export default function Canvas({ shader, uniforms = {}, passTickUniform = false,
         <Node
           shader={shader}
           uniforms={{
-            uAspectRatio: measurements.width / measurements.height,
-            uResolution: [measurements.width, measurements.height],
-            uMouse: mousePos,
+            ...(passAspectRatioUniform
+              ? {
+                  uAspectRatio: measurements.width / measurements.height,
+                }
+              : {}),
+            ...(passResolutionUniform
+              ? {
+                  uResolution: [measurements.width, measurements.height],
+                }
+              : {}),
+            ...(passMouseUniform ? { uMouse: mousePos } : {}),
+            ...(passTickUniform ? { uTick: tick } : {}),
             ...uniforms,
-            ...(passTickUniform ? { uTick: tick, uTime: time } : {}),
           }}
         />
       </Surface>

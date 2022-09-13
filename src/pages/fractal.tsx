@@ -11,7 +11,7 @@ const shader = Shaders.create({
 export default function RayMarcher() {
   return (
     <Canvas
-      className="h-screen"
+      className="h-screen overflow-hidden"
       shader={shader.rayMarcher}
       uniforms={{ uMatcap1: 'matcap1.png', uMatcap2: 'matcap2.png' }}
     />
