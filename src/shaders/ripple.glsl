@@ -56,7 +56,7 @@ vec2 aspectRatio(vec2 uv, float canvasAspectRatio, float textureAspectRatio) {
 
   float diff = textureAspectRatio / canvasAspectRatio;
 
-  if (diff > 1.0) {
+  if(diff > 1.0) {
     // the texture is more landscapeish than the canvas
     // then make the coords.y to go from 0...1 and limit the coords.x
     coords.x *= 1.0 / diff;
@@ -67,7 +67,7 @@ vec2 aspectRatio(vec2 uv, float canvasAspectRatio, float textureAspectRatio) {
     coords.y *= diff;
     coords.y += (1.0 - diff) / 2.0;
   }
-  
+
   return coords;
 }
 
@@ -110,8 +110,7 @@ void main() {
   disp += (cPos - vec2(0.05, 0.05)) / cLength * cos(cLength * 12.0 - 9.0 * time) * 0.02;
 
   float colorDistort = rand(cPos);
-  float distortStrength = 0.01 * smoothstep(0.0, 0.8, t) 
-    + 0.01 * smoothstep(0.5, 0.6, cLength);
+  float distortStrength = 0.01 * smoothstep(0.0, 0.8, t) + 0.01 * smoothstep(0.5, 0.6, cLength);
   distortStrength /= 1.5;
 
   vec4 greenChannel = texture2D(uPattern, point + disp + colorDistort * distortStrength);
@@ -122,9 +121,7 @@ void main() {
   blueChannel.r = 0.0;
   blueChannel.g = 0.0;
 
-  vec4 redChannel = texture2D(uPattern, 
-      point + disp - vec2(0.0, colorDistort * distortStrength)
-  );
+  vec4 redChannel = texture2D(uPattern, point + disp - vec2(0.0, colorDistort * distortStrength));
   redChannel.b = 0.0;
   redChannel.g = 0.0;
 
